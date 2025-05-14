@@ -13,9 +13,20 @@ export function CameraCapture({ onImageCaptured }: Props) {
   const [isCameraOn, setIsCameraOn] = useState(false)
 
   const startCamera = async () => {
-    setIsCameraOn(true)
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-    if (videoRef.current) videoRef.current.srcObject = stream
+    try {
+      setIsCameraOn(true)
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "environment" }, // Rear camera for mobile
+        },
+        audio: false,
+      })
+      if (videoRef.current) videoRef.current.srcObject = stream
+    } catch (err) {
+      console.error("Error accessing camera:", err)
+      alert("Camera access failed. Please allow permissions and try again.")
+      setIsCameraOn(false)
+    }
   }
 
   const captureImage = () => {
@@ -46,7 +57,7 @@ export function CameraCapture({ onImageCaptured }: Props) {
     <div className="flex flex-col items-center gap-4">
       {isCameraOn ? (
         <>
-          <video ref={videoRef} autoPlay className="rounded max-h-72" />
+          <video ref={videoRef} autoPlay playsInline className="rounded max-h-72" />
           <div className="flex gap-4">
             <Button onClick={captureImage}>Capture</Button>
             <Button variant="outline" onClick={stopCamera}>
