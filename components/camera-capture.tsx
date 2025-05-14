@@ -14,25 +14,35 @@ export function CameraCapture({ onImageCaptured }: Props) {
 
   const startCamera = async () => {
     try {
-      setIsCameraOn(true)
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "environment" }, // Rear camera for mobile
-        },
+        video: { facingMode: "environment" }, // Use rear camera on mobile
         audio: false,
       })
-      if (videoRef.current) videoRef.current.srcObject = stream
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play()
+          setIsCameraOn(true)
+        }
+      }
     } catch (err) {
-      console.error("Error accessing camera:", err)
-      alert("Camera access failed. Please allow permissions and try again.")
-      setIsCameraOn(false)
+      console.error("Camera access error:", err)
+      alert("Unable to access camera. Please allow permission.")
     }
   }
 
   const captureImage = () => {
-    if (!canvasRef.current || !videoRef.current) return
     const video = videoRef.current
     const canvas = canvasRef.current
+    if (!video || !canvas) return
+
+    // Ensure the video is ready
+    if (video.readyState < 2) {
+      alert("Camera not ready yet. Please try again.")
+      return
+    }
+
     const context = canvas.getContext("2d")
     if (context) {
       canvas.width = video.videoWidth
@@ -45,10 +55,11 @@ export function CameraCapture({ onImageCaptured }: Props) {
   }
 
   const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
+    const video = videoRef.current
+    if (video && video.srcObject) {
+      const tracks = (video.srcObject as MediaStream).getTracks()
       tracks.forEach((track) => track.stop())
-      videoRef.current.srcObject = null
+      video.srcObject = null
     }
     setIsCameraOn(false)
   }
@@ -57,7 +68,12 @@ export function CameraCapture({ onImageCaptured }: Props) {
     <div className="flex flex-col items-center gap-4">
       {isCameraOn ? (
         <>
-          <video ref={videoRef} autoPlay playsInline className="rounded max-h-72" />
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className="rounded max-h-72 w-full object-contain"
+          />
           <div className="flex gap-4">
             <Button onClick={captureImage}>Capture</Button>
             <Button variant="outline" onClick={stopCamera}>
