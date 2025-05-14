@@ -14,21 +14,23 @@ export function CameraCapture({ onImageCaptured }: Props) {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }, // Use rear camera on mobile
-        audio: false,
-      })
+      const constraints = {
+        video: {
+          facingMode: { ideal: "environment" } // Use back camera on mobile
+        },
+        audio: false
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play()
-          setIsCameraOn(true)
-        }
+        videoRef.current.play()
+        setIsCameraOn(true)
       }
-    } catch (err) {
-      console.error("Camera access error:", err)
-      alert("Unable to access camera. Please allow permission.")
+    } catch (error) {
+      console.error("Error accessing camera:", error)
+      alert("Could not access the camera. Please allow camera permission.")
     }
   }
 
@@ -37,20 +39,18 @@ export function CameraCapture({ onImageCaptured }: Props) {
     const canvas = canvasRef.current
     if (!video || !canvas) return
 
-    // Ensure the video is ready
-    if (video.readyState < 2) {
-      alert("Camera not ready yet. Please try again.")
-      return
-    }
-
     const context = canvas.getContext("2d")
-    if (context) {
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      context.drawImage(video, 0, 0)
-      const base64 = canvas.toDataURL("image/jpeg")
-      onImageCaptured(base64)
-    }
+    if (!context) return
+
+    // Set canvas size same as video
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
+    // Draw current frame from video
+    context.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    const base64 = canvas.toDataURL("image/jpeg")
+    onImageCaptured(base64)
     stopCamera()
   }
 
@@ -65,14 +65,15 @@ export function CameraCapture({ onImageCaptured }: Props) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-4 w-full">
       {isCameraOn ? (
         <>
           <video
             ref={videoRef}
             autoPlay
             playsInline
-            className="rounded max-h-72 w-full object-contain"
+            muted
+            className="rounded w-full h-auto max-h-96 border"
           />
           <div className="flex gap-4">
             <Button onClick={captureImage}>Capture</Button>
