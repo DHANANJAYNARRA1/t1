@@ -74,7 +74,16 @@ export function ImageUploader({ onImageSelected }: ImageUploaderProps) {
           <Upload size={16} />
           Select Image
         </Button>
-        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+       {/* <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} /> */}
+     <input
+  type="file"
+  ref={fileInputRef}
+  className="hidden"
+  accept="image/*"
+  capture="environment"
+  onChange={handleFileChange}
+/>
+
       </Card>
     </div>
   )

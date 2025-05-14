@@ -1,13 +1,20 @@
 "use client"
 
-import { AlertTriangle, CheckCircle, FileText, Info, ClipboardList, Stethoscope, Share2 } from "lucide-react"
+import {
+  AlertTriangle,
+  CheckCircle,
+  FileText,
+  Info,
+  ClipboardList,
+  Share2
+} from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import type { TongueAnalysisResult } from "./tongue-analyzer"
 import { Button } from "@/components/ui/button"
 import jsPDF from "jspdf"
 import html2canvas from "html2canvas"
 import { useRef } from "react"
+import type { TongueAnalysisResult } from "./tongue-analyzer"
 
 interface AnalysisResultsProps {
   results: TongueAnalysisResult
@@ -22,17 +29,20 @@ const tongueColorChart = [
   {
     color: 'Bright Red ("Strawberry Tongue")',
     aliases: ["bright red", "red tongue", "strawberry tongue", "red"],
-    meaning: "Could indicate Vitamin B12 deficiency, Kawasaki disease, or Scarlet fever.",
+    meaning:
+      "Could indicate Vitamin B12 deficiency, Kawasaki disease, or Scarlet fever.",
   },
   {
     color: "Pale Tongue",
     aliases: ["pale", "light pink", "anemic tongue", "pale pink"],
-    meaning: "May be related to anemia, low iron levels, or poor blood circulation.",
+    meaning:
+      "May be related to anemia, low iron levels, or poor blood circulation.",
   },
   {
     color: "Blue or Purple Tongue",
     aliases: ["blue", "purple", "cyanotic"],
-    meaning: "Often linked with heart or lung issues or poor oxygen delivery.",
+    meaning:
+      "Often linked with heart or lung issues or poor oxygen delivery.",
   },
   {
     color: "White Coating",
@@ -62,44 +72,43 @@ const tongueColorChart = [
   {
     color: "Smooth, Glossy Tongue",
     aliases: ["smooth", "glossy", "bald tongue"],
-    meaning: "Can suggest deficiencies in iron, folate, or B12.",
+    meaning:
+      "Can suggest deficiencies in iron, folate, or B12.",
   },
   {
     color: "Grayish or Brown Tongue",
     aliases: ["gray", "brown", "discolored tongue"],
-    meaning: "Usually related to smoking, certain medications, or poor hygiene.",
+    meaning:
+      "Usually related to smoking, certain medications, or poor hygiene.",
   },
 ]
 
 export function AnalysisResults({ results }: AnalysisResultsProps) {
   const pdfRef = useRef<HTMLDivElement>(null)
 
-  // Extract color information from the appearance or description
   const extractColors = () => {
-    const colors = []
+    const colors: string[] = []
 
-    // Add the main color from appearance if available
     if (results.appearance?.color) {
       colors.push(results.appearance.color.toLowerCase())
     }
 
-    // Add coating information if available
     if (results.appearance?.coating) {
       colors.push(results.appearance.coating.toLowerCase())
     }
 
-    // If we have explicit detected colors, use those
     if (results.detectedColors && Array.isArray(results.detectedColors)) {
-      return results.detectedColors
+      return results.detectedColors.map((c) => c.toLowerCase())
     }
 
     return colors
   }
 
-  // Find relevant chart entries based on extracted colors
   const relevantChart = tongueColorChart.filter((item) => {
     const extractedColors = extractColors()
-    return item.aliases.some((alias) => extractedColors.some((color) => color.includes(alias.toLowerCase())))
+    return item.aliases.some((alias) =>
+      extractedColors.some((color) => color.includes(alias.toLowerCase()))
+    )
   })
 
   const downloadPDF = async () => {
@@ -141,7 +150,7 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {results.potentialDeficiencies && results.potentialDeficiencies.length > 0 ? (
+            {results.potentialDeficiencies?.length > 0 ? (
               <ul className="space-y-2">
                 {results.potentialDeficiencies.map((item, index) => (
                   <li key={index} className="flex items-start gap-2">
@@ -165,7 +174,7 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {results.potentialConcerns && results.potentialConcerns.length > 0 ? (
+            {results.potentialConcerns?.length > 0 ? (
               <ul className="space-y-2">
                 {results.potentialConcerns.map((item, index) => (
                   <li key={index} className="flex items-start gap-2">
@@ -178,7 +187,6 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
               <p className="text-gray-500">No specific health concerns detected.</p>
             )}
             <Separator className="my-4" />
-           
           </CardContent>
         </Card>
       </div>
@@ -192,7 +200,7 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {results.recommendations && results.recommendations.length > 0 ? (
+          {results.recommendations?.length > 0 ? (
             <ul className="space-y-2">
               {results.recommendations.map((item, index) => (
                 <li key={index} className="flex items-start gap-2">
@@ -207,7 +215,7 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
         </CardContent>
       </Card>
 
-      {/* Relevant Tongue Color Chart */}
+      {/* Relevant Tongue Chart */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -229,12 +237,17 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
         </CardContent>
       </Card>
 
-      {/* PDF Button */}
+      {/* PDF Download Button */}
       <div className="flex justify-end">
-        <Button onClick={downloadPDF} className="mt-4 gap-2">
+       {/* <Button onClick={downloadPDF} className="mt-4 gap-2">
           <Share2 className="h-4 w-4" />
           Share Results as PDF
-        </Button>
+        </Button> */}
+        <Button onClick={downloadPDF} variant="outline" className="mt-6 flex gap-2">
+  <Share2 size={16} />
+  Download PDF
+</Button>
+
       </div>
     </div>
   )
